@@ -338,7 +338,11 @@ const TripPlanningForm = () => {
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={() => setShowMap(!showMap)}
+                  onClick={() => {
+                    console.log('Button clicked! Current showMap state:', showMap);
+                    setShowMap(!showMap);
+                    console.log('Setting showMap to:', !showMap);
+                  }}
                 >
                   {showMap ? 'Hide Map' : 'Select Your First Destination'}
                 </Button>
