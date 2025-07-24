@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { Destination } from './TripPlanningForm';
 
 // Fix for default markers in react-leaflet
@@ -178,7 +177,6 @@ const TripMapSelector: React.FC<TripMapSelectorProps> = ({
         
         <MapClickHandler onAddDestination={addDestination} />
 
-        {/* Starting point marker */}
         {startCoords && (
           <Marker position={startCoords} icon={startIcon}>
             <Popup>
@@ -191,7 +189,6 @@ const TripMapSelector: React.FC<TripMapSelectorProps> = ({
           </Marker>
         )}
 
-        {/* Destination markers */}
         {destinations.map((dest, index) => (
           <Marker
             key={dest.id}
@@ -217,7 +214,6 @@ const TripMapSelector: React.FC<TripMapSelectorProps> = ({
           </Marker>
         ))}
 
-        {/* Ending point marker */}
         {endCoords && (
           <Marker position={endCoords} icon={endIcon}>
             <Popup>
