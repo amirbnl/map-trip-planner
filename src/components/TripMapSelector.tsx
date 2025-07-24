@@ -46,6 +46,77 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({ onAddDestination }) =
   return null;
 };
 
+interface MapMarkersProps {
+  startCoords: [number, number] | null;
+  endCoords: [number, number] | null;
+  destinations: Destination[];
+  startingAddress: string;
+  endingAddress: string;
+  onDestinationsChange: (destinations: Destination[]) => void;
+}
+
+const MapMarkers: React.FC<MapMarkersProps> = ({
+  startCoords,
+  endCoords,
+  destinations,
+  startingAddress,
+  endingAddress,
+  onDestinationsChange,
+}) => {
+  return (
+    <>
+      {startCoords && (
+        <Marker position={startCoords} icon={startIcon}>
+          <Popup>
+            <div className="text-center">
+              <strong>Starting Point</strong>
+              <br />
+              {startingAddress}
+            </div>
+          </Popup>
+        </Marker>
+      )}
+
+      {destinations.map((dest, index) => (
+        <Marker
+          key={dest.id}
+          position={[dest.lat, dest.lng]}
+          icon={wayPointIcon}
+        >
+          <Popup>
+            <div className="text-center">
+              <strong>Destination {index + 1}</strong>
+              <br />
+              Lat: {dest.lat.toFixed(4)}, Lng: {dest.lng.toFixed(4)}
+              <br />
+              <button
+                onClick={() => {
+                  onDestinationsChange(destinations.filter(d => d.id !== dest.id));
+                }}
+                className="mt-2 px-2 py-1 bg-red-500 text-white rounded text-xs"
+              >
+                Remove
+              </button>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {endCoords && (
+        <Marker position={endCoords} icon={endIcon}>
+          <Popup>
+            <div className="text-center">
+              <strong>Ending Point</strong>
+              <br />
+              {endingAddress}
+            </div>
+          </Popup>
+        </Marker>
+      )}
+    </>
+  );
+}
+
 const TripMapSelector: React.FC<TripMapSelectorProps> = ({
   destinations,
   onDestinationsChange,
@@ -174,57 +245,15 @@ const TripMapSelector: React.FC<TripMapSelectorProps> = ({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        
         <MapClickHandler onAddDestination={addDestination} />
-
-        {startCoords && (
-          <Marker position={startCoords} icon={startIcon}>
-            <Popup>
-              <div className="text-center">
-                <strong>Starting Point</strong>
-                <br />
-                {startingAddress}
-              </div>
-            </Popup>
-          </Marker>
-        )}
-
-        {destinations.map((dest, index) => (
-          <Marker
-            key={dest.id}
-            position={[dest.lat, dest.lng]}
-            icon={wayPointIcon}
-          >
-            <Popup>
-              <div className="text-center">
-                <strong>Destination {index + 1}</strong>
-                <br />
-                Lat: {dest.lat.toFixed(4)}, Lng: {dest.lng.toFixed(4)}
-                <br />
-                <button
-                  onClick={() => {
-                    onDestinationsChange(destinations.filter(d => d.id !== dest.id));
-                  }}
-                  className="mt-2 px-2 py-1 bg-red-500 text-white rounded text-xs"
-                >
-                  Remove
-                </button>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-        {endCoords && (
-          <Marker position={endCoords} icon={endIcon}>
-            <Popup>
-              <div className="text-center">
-                <strong>Ending Point</strong>
-                <br />
-                {endingAddress}
-              </div>
-            </Popup>
-          </Marker>
-        )}
+        <MapMarkers 
+          startCoords={startCoords}
+          endCoords={endCoords}
+          destinations={destinations}
+          startingAddress={startingAddress}
+          endingAddress={endingAddress}
+          onDestinationsChange={onDestinationsChange}
+        />
       </MapContainer>
     </div>
   );
