@@ -1,29 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
 import { Destination } from './TripPlanningForm';
-
-// Fix for default markers in react-leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-// Custom marker icons
-const createCustomIcon = (color: string) => new L.Icon({
-  iconUrl: `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
-const startIcon = createCustomIcon('green');
-const endIcon = createCustomIcon('red');
-const wayPointIcon = createCustomIcon('blue');
+import SimpleMap from './SimpleMap';
 
 interface TripMapSelectorProps {
   destinations: Destination[];
@@ -31,90 +8,6 @@ interface TripMapSelectorProps {
   startingAddress: string;
   endingAddress: string;
   onDistanceCalculated: (distance: number) => void;
-}
-
-interface MapClickHandlerProps {
-  onAddDestination: (lat: number, lng: number) => void;
-}
-
-const MapClickHandler: React.FC<MapClickHandlerProps> = ({ onAddDestination }) => {
-  useMapEvents({
-    click: (e) => {
-      onAddDestination(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-};
-
-interface MapMarkersProps {
-  startCoords: [number, number] | null;
-  endCoords: [number, number] | null;
-  destinations: Destination[];
-  startingAddress: string;
-  endingAddress: string;
-  onDestinationsChange: (destinations: Destination[]) => void;
-}
-
-const MapMarkers: React.FC<MapMarkersProps> = ({
-  startCoords,
-  endCoords,
-  destinations,
-  startingAddress,
-  endingAddress,
-  onDestinationsChange,
-}) => {
-  return (
-    <>
-      {startCoords && (
-        <Marker position={startCoords} icon={startIcon}>
-          <Popup>
-            <div className="text-center">
-              <strong>Starting Point</strong>
-              <br />
-              {startingAddress}
-            </div>
-          </Popup>
-        </Marker>
-      )}
-
-      {destinations.map((dest, index) => (
-        <Marker
-          key={dest.id}
-          position={[dest.lat, dest.lng]}
-          icon={wayPointIcon}
-        >
-          <Popup>
-            <div className="text-center">
-              <strong>Destination {index + 1}</strong>
-              <br />
-              Lat: {dest.lat.toFixed(4)}, Lng: {dest.lng.toFixed(4)}
-              <br />
-              <button
-                onClick={() => {
-                  onDestinationsChange(destinations.filter(d => d.id !== dest.id));
-                }}
-                className="mt-2 px-2 py-1 bg-red-500 text-white rounded text-xs"
-              >
-                Remove
-              </button>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-
-      {endCoords && (
-        <Marker position={endCoords} icon={endIcon}>
-          <Popup>
-            <div className="text-center">
-              <strong>Ending Point</strong>
-              <br />
-              {endingAddress}
-            </div>
-          </Popup>
-        </Marker>
-      )}
-    </>
-  );
 }
 
 const TripMapSelector: React.FC<TripMapSelectorProps> = ({
@@ -127,9 +20,6 @@ const TripMapSelector: React.FC<TripMapSelectorProps> = ({
   const [startCoords, setStartCoords] = useState<[number, number] | null>(null);
   const [endCoords, setEndCoords] = useState<[number, number] | null>(null);
 
-  // Default center (Tunisia)
-  const defaultCenter: [number, number] = [33.8869, 9.5375];
-
   const addDestination = (lat: number, lng: number) => {
     const newDestination: Destination = {
       id: Date.now().toString(),
@@ -138,6 +28,10 @@ const TripMapSelector: React.FC<TripMapSelectorProps> = ({
       name: `Destination ${destinations.length + 1}`,
     };
     onDestinationsChange([...destinations, newDestination]);
+  };
+
+  const removeDestination = (id: string) => {
+    onDestinationsChange(destinations.filter(d => d.id !== id));
   };
 
   // Geocoding function using Nominatim
@@ -156,7 +50,7 @@ const TripMapSelector: React.FC<TripMapSelectorProps> = ({
     return null;
   };
 
-  // Calculate route distance using OpenRouteService
+  // Calculate route distance using OSRM
   const calculateRouteDistance = async (coordinates: [number, number][]) => {
     if (coordinates.length < 2) return 0;
 
@@ -234,28 +128,13 @@ const TripMapSelector: React.FC<TripMapSelectorProps> = ({
   }, [startCoords, endCoords, destinations, onDistanceCalculated]);
 
   return (
-    <div className="h-96 w-full rounded-lg overflow-hidden border">
-      <MapContainer
-        center={defaultCenter}
-        zoom={7}
-        style={{ height: '100%', width: '100%' }}
-        className="rounded-lg"
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <MapClickHandler onAddDestination={addDestination} />
-        <MapMarkers 
-          startCoords={startCoords}
-          endCoords={endCoords}
-          destinations={destinations}
-          startingAddress={startingAddress}
-          endingAddress={endingAddress}
-          onDestinationsChange={onDestinationsChange}
-        />
-      </MapContainer>
-    </div>
+    <SimpleMap
+      destinations={destinations}
+      onAddDestination={addDestination}
+      startCoords={startCoords}
+      endCoords={endCoords}
+      onRemoveDestination={removeDestination}
+    />
   );
 };
 
