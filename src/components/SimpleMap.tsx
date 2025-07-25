@@ -98,7 +98,7 @@ const SimpleMap: React.FC<SimpleMapProps> = ({
 
       marker.bindPopup(`
         <div style="text-align: center;">
-          <strong>Destination ${index + 1}</strong><br/>
+          <strong>${dest.name || `Destination ${index + 1}`}</strong><br/>
           ${dest.lat.toFixed(4)}, ${dest.lng.toFixed(4)}<br/>
           <button onclick="window.removeDestination('${dest.id}')" style="margin-top: 8px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
             Remove

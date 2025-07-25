@@ -14,6 +14,8 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import TripMapSelector from './TripMapSelector';
 import TripSummary from './TripSummary';
+import LocationAutocomplete from './LocationAutocomplete';
+import DestinationSearchInput from './DestinationSearchInput';
 
 const formSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
@@ -266,7 +268,11 @@ const TripPlanningForm = () => {
                             Starting Address
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter your starting point" {...field} />
+                            <LocationAutocomplete
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Search for your starting point..."
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -283,7 +289,11 @@ const TripPlanningForm = () => {
                             Ending Address
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter your destination" {...field} />
+                            <LocationAutocomplete
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Search for your destination..."
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -334,6 +344,11 @@ const TripPlanningForm = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                <DestinationSearchInput
+                  destinations={destinations}
+                  onDestinationsChange={setDestinations}
+                />
+                
                 <Button
                   type="button"
                   variant="outline"
@@ -344,7 +359,7 @@ const TripPlanningForm = () => {
                     console.log('Setting showMap to:', !showMap);
                   }}
                 >
-                  {showMap ? 'Hide Map' : 'Select Your First Destination'}
+                  {showMap ? 'Hide Map' : 'Show Map for Visual Selection'}
                 </Button>
 
                 {destinations.length > 0 && (
@@ -357,7 +372,7 @@ const TripPlanningForm = () => {
                           className="flex items-center justify-between p-2 bg-secondary rounded-md"
                         >
                           <span className="text-sm">
-                            Destination {index + 1}: {dest.lat.toFixed(4)}, {dest.lng.toFixed(4)}
+                            {dest.name || `Destination ${index + 1}`}: {dest.lat.toFixed(4)}, {dest.lng.toFixed(4)}
                           </span>
                           <Button
                             type="button"
