@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -58,6 +58,57 @@ const TripPlanningForm = () => {
   });
 
   const tripCost = totalDistance * 1.3;
+
+  // Calculate distance between starting and ending addresses
+  const calculateDirectDistance = async (startAddr: string, endAddr: string) => {
+    if (!startAddr || !endAddr) return;
+    
+    try {
+      // Geocode both addresses
+      const [startResponse, endResponse] = await Promise.all([
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(startAddr)}&limit=1`),
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endAddr)}&limit=1`)
+      ]);
+      
+      const [startData, endData] = await Promise.all([
+        startResponse.json(),
+        endResponse.json()
+      ]);
+      
+      if (startData.length > 0 && endData.length > 0) {
+        const startLat = parseFloat(startData[0].lat);
+        const startLng = parseFloat(startData[0].lon);
+        const endLat = parseFloat(endData[0].lat);
+        const endLng = parseFloat(endData[0].lon);
+        
+        // Calculate distance using Haversine formula
+        const R = 6371; // Earth's radius in kilometers
+        const dLat = (endLat - startLat) * Math.PI / 180;
+        const dLng = (endLng - startLng) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(startLat * Math.PI / 180) * Math.cos(endLat * Math.PI / 180) *
+                  Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+        
+        setTotalDistance(distance);
+      }
+    } catch (error) {
+      console.error('Error calculating distance:', error);
+    }
+  };
+
+  // Watch for changes in both addresses and calculate distance
+  const startingAddress = form.watch('startingAddress');
+  const endingAddress = form.watch('endingAddress');
+  
+  useEffect(() => {
+    if (startingAddress && endingAddress) {
+      calculateDirectDistance(startingAddress, endingAddress);
+    } else {
+      setTotalDistance(0);
+    }
+  }, [startingAddress, endingAddress]);
 
   const onSubmit = (data: FormData) => {
     const submissionData = {
